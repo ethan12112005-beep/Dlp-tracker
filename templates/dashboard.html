@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DLP Tracker">
+<meta name="theme-color" content="#0a0614">
+<title>DLP Tracker</title>
+<style>
+:root{--gold:#c9a84c;--deep:#0a0614;--card:#18122e;--border:rgba(201,168,76,0.15);--text:#e8dfc8;--muted:#7a7090;--green:#4ecb71;--orange:#f0a050;--red:#e05060;--blue:#5090e0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:system-ui,sans-serif;background:var(--deep);color:var(--text);height:100vh;display:flex;flex-direction:column;}
+.topbar{background:rgba(10,6,20,.95);border-bottom:1px solid var(--border);padding:50px 16px 12px;display:flex;align-items:center;justify-content:space-between;}
+.topbar h1{font-size:1rem;font-weight:700;color:var(--gold);}
+.refresh-btn{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);color:var(--gold);border-radius:20px;padding:6px 14px;font-size:.75rem;font-weight:700;cursor:pointer;}
+.scroll{flex:1;overflow-y:auto;padding-bottom:80px;}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:rgba(10,6,20,.97);border-top:1px solid var(--border);display:flex;padding-bottom:20px;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 6px;cursor:pointer;border:none;background:transparent;}
+.tab-icon{font-size:1.4rem;margin-bottom:3px;}
+.tab-lbl{font-size:.58rem;color:var(--muted);font-weight:700;text-transform:uppercase;}
+.tab.active .tab-lbl{color:var(--gold);}
+.panel{display:none;}.panel.active{display:block;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin:10px 14px;padding:14px;}
+.ride-name{font-size:.88rem;font-weight:700;margin-bottom:6px;}
+.wait-big{font-size:2.2rem;font-weight:700;font-family:serif;}
+.cl-green{color:var(--green);}.cl-orange{color:var(--orange);}.cl-red{color:var(--red);}.cl-muted{color:var(--muted);}
+.bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin:6px 0;}
+.bar-f{height:100%;border-radius:2px;}
+.slots6{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:8px;}
+.s6{text-align:center;background:rgba(255,255,255,.04);border-radius:5px;padding:4px 2px;}
+.s6l{font-size:.48rem;color:var(--muted);display:block;margin-bottom:1px;}
+.s6v{font-size:.65rem;font-weight:700;}
+.badge{font-size:.6rem;padding:2px 7px;border-radius:10px;background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.2);}
+.fp-badge{background:rgba(80,144,224,.15);color:#5090e0;border-color:rgba(80,144,224,.3);}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 14px 0;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center;}
+.stat-v{font-size:1.2rem;font-weight:700;color:var(--gold);}
+.stat-l{font-size:.58rem;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+.sec{margin:14px 14px 6px;font-size:.78rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;}
+.slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 14px;}
+.slot-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center;}
+.slot-icon{font-size:1.2rem;}.slot-name{font-size:.65rem;color:var(--gold);font-weight:700;margin:3px 0;}
+.slot-range{font-size:.52rem;color:var(--muted);margin-bottom:5px;}
+.slot-val{font-size:1.3rem;font-weight:700;font-family:serif;}
+.slot-unit{font-size:.6rem;color:var(--muted);}
+.wt-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
+.wt-row:last-child{border-bottom:none;}
+.rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;}
+.r1{background:var(--gold);color:#000;}.r2{background:#aaa;color:#000;}.r3{background:#cd7f32;color:#000;}.rn{background:rgba(255,255,255,.1);color:var(--muted);}
+.wt-name{flex:1;font-size:.78rem;font-weight:600;margin:0 8px;}
+.wt-avg{font-size:.9rem;font-weight:700;font-family:serif;}
+.plan-slot{background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 14px 10px;overflow:hidden;}
+.plan-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.plan-icon{font-size:1.3rem;}.plan-title{font-size:.85rem;font-weight:700;color:var(--gold);}
+.plan-range{font-size:.65rem;color:var(--muted);}
+.plan-body{padding:10px 14px;}
+.plan-ride{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.plan-ride:last-child{border-bottom:none;}
+.pr-name{font-size:.8rem;font-weight:700;}.pr-land{font-size:.62rem;color:var(--muted);}
+.pr-wait{font-size:1rem;font-weight:700;font-family:serif;}
+.fp-tag{background:rgba(80,144,224,.2);color:#5090e0;border:1px solid rgba(80,144,224,.3);border-radius:6px;padding:2px 6px;font-size:.6rem;font-weight:700;}
+.plan-tip{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:8px 10px;font-size:.7rem;line-height:1.6;margin-top:8px;color:#c0a870;}
+.sel{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px;font-size:.88rem;margin:0 0 10px;}
+.hourly-row{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);}
+.hr-time{font-size:.75rem;font-weight:700;width:50px;}
+.hr-slot{font-size:.6rem;color:var(--muted);flex:1;}
+.hr-bar{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin:0 6px;}
+.hr-bar-f{height:100%;border-radius:2px;}
+.hr-wait{font-size:.85rem;font-weight:700;width:40px;text-align:right;}
+.cd{display:flex;align-items:center;justify-content:space-between;margin:10px 14px 0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;}
+.cd-num{font-size:1.1rem;font-weight:700;color:var(--gold);}
+.cd-lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:.85rem;}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:.78rem;opacity:0;transition:all .3s;z-index:100;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🏰 DLP Tracker</h1>
+  <button class="refresh-btn" onclick="refreshAll()">↻ Actualiser</button>
+</div>
+<div class="scroll">
+  <div class="cd"><div><div class="cd-lbl">Jours restants</div><div class="cd-num" id="daysLeft">—</div></div><div style="text-align:right"><div style="font-size:.65rem;color:var(--gold);font-weight:700">26 mai 2025</div><div style="font-size:.58rem;color:var(--muted)">Reine des Neiges ❄️</div></div></div>
+  <div class="stats-row"><div class="stat"><div class="stat-v" id="st1">—</div><div class="stat-l">Collectes</div></div><div class="stat"><div class="stat-v" id="st2">—</div><div class="stat-l">Jours</div></div><div class="stat"><div class="stat-v" id="st3">—</div><div class="stat-l">Attractions</div></div></div>
+  <div style="text-align:center;font-size:.65rem;color:var(--muted);margin:6px 0" id="lastTxt">Dernière collecte : —</div>
+  <div class="panel active" id="panel-live"></div>
+  <div class="panel" id="panel-daily"></div>
+  <div class="panel" id="panel-attr"></div>
+  <div class="panel" id="panel-plan"></div>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('live')" id="tab-live"><span class="tab-icon">🎡</span><span class="tab-lbl">Direct</span></button>
+  <button class="tab" onclick="showTab('daily')" id="tab-daily"><span class="tab-icon">📅</span><span class="tab-lbl">Journée</span></button>
+  <button class="tab" onclick="showTab('attr')" id="tab-attr"><span class="tab-icon">🔍</span><span class="tab-lbl">Attraction</span></button>
+  <button class="tab" onclick="showTab('plan')" id="tab-plan"><span class="tab-icon">🗓️</span><span class="tab-lbl">26 mai</span></button>
+</div>
+<div id="toast"></div>
+<script>
+const END=new Date('2025-05-26'),START=new Date('2025-03-28');
+const SLOTS=[
+  {key:'ouverture',label:'Ouverture',range:'9h30–10h30',icon:'🌅',start:9.5,end:10.5},
+  {key:'matinee',label:'Matinée',range:'10h30–12h00',icon:'☀️',start:10.5,end:12},
+  {key:'midi',label:'Midi',range:'12h00–14h00',icon:'🕛',start:12,end:14},
+  {key:'apresmidi',label:'Après-midi',range:'14h00–16h30',icon:'🌤️',start:14,end:16.5},
+  {key:'fin',label:'Fin de J.',range:'16h30–19h00',icon:'🌇',start:16.5,end:19},
+  {key:'soiree',label:'Soirée',range:'19h00–22h00',icon:'🌙',start:19,end:22},
+];
+let LATEST=[],STATS={},STATUS={},activeTab='live';
+function wc(m){if(m==null)return'cl-muted';if(m<=20)return'cl-green';if(m<=45)return'cl-orange';return'cl-red';}
+function wbg(m){if(!m)return'rgba(255,255,255,.1)';if(m<=20)return'#4ecb71';if(m<=45)return'#f0a050';return'#e05060';}
+function sl(l){if(!l)return'?';const m={'Fantasyland':'Fantasy','Discoveryland':'Discovery','Adventureland':'Aventure','Frontierland':'Frontier','Main Street':'Main St.','Studios':'Studios','Pixar':'Pixar','Avengers':'Avengers','Toy Story':'Toy Story'};for(const[k,v]of Object.entries(m))if(l.includes(k))return v;return l.slice(0,8);}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+function showTab(n){activeTab=n;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById('panel-'+n).classList.add('active');renderTab(n);}
+function renderTab(n){if(n==='live')renderLive();else if(n==='daily')renderDaily();else if(n==='attr')renderAttr();else if(n==='plan')renderPlan();}
+async function fetchAll(){
+  try{
+    const[s,l,st]=await Promise.all([fetch('/api/status').then(r=>r.json()),fetch('/api/latest').then(r=>r.json()),fetch('/api/stats').then(r=>r.json())]);
+    STATUS=s;LATEST=l;STATS=st;
+    document.getElementById('st1').textContent=s.total_rows||0;
+    document.getElementById('st2').textContent=s.days_collected||0;
+    document.getElementById('st3').textContent=s.rides_tracked||0;
+    document.getElementById('lastTxt').textContent='Dernière collecte : '+(s.last_collect||'—');
+    return true;
+  }catch(e){return false;}
+}
+async function refreshAll(){
+  const btn=document.querySelector('.refresh-btn');btn.textContent='...';btn.disabled=true;
+  const ok=await fetchAll();btn.textContent='↻ Actualiser';btn.disabled=false;
+  if(ok){toast('✅ Actualisé');renderTab(activeTab);}else toast('❌ Erreur');
+}
+function updateCountdown(){
+  const days=Math.max(0,Math.ceil((END-new Date())/(1000*3600*24)));
+  document.getElementById('daysLeft').textContent=days+'j';
+}
+function renderLive(){
+  const el=document.getElementById('panel-live');
+  if(!LATEST.length){el.innerHTML='<div class="empty">🎢<br><br>Lance le serveur Railway<br>puis clique Actualiser</div>';return;}
+  const maxW=Math.max(...LATEST.map(r=>r.wait||0),1);
+  let h='<div class="sec">🎡 Temps réel</div>';
+  [...LATEST].sort((a,b)=>(b.wait||0)-(a.wait||0)).forEach(ride=>{
+    const st=STATS[ride.ride_name]||{};
+    const pct=Math.round(((ride.wait||0)/maxW)*100);
+    const cls=wc(ride.is_open?ride.wait:null);
+    const fp=st.is_fp;
+    const s6=SLOTS.map(s=>{const v=st.slot_avgs?.[s.key];return`<div class="s6"><span class="s6l">${s.icon}</span><span class="s6v ${v!=null?wc(v):''}">${v!=null?v+'m':'—'}</span></div>`;}).join('');
+    h+=`<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div class="ride-name">${ride.ride_name}</div><span class="badge ${fp?'fp-badge':''}">${fp?'⚡FP':sl(ride.land)}</span></div>
+    <div>${ride.is_open?`<span class="wait-big ${cls}">${ride.wait||0}</span><span style="font-size:.72rem;color:var(--muted)"> min</span>`:'<span class="cl-muted">Fermée</span>'}</div>
+    <div class="bar"><div class="bar-f" style="width:${pct}%;background:${wbg(ride.wait)}"></div></div>
+    <div class="slots6">${s6}</div>
+    <div style="font-size:.62rem;color:var(--muted);margin-top:6px">${Object.keys(st.daily_avgs||{}).length}j de données · moy ${st.global_avg!=null?st.global_avg+'min':'—'}</div></div>`;
+  });
+  el.innerHTML=h;
+}
+function renderDaily(){
+  const el=document.getElementById('panel-daily');
+  const rides=Object.entries(STATS).filter(([,s])=>s.global_avg!==null);
+  if(!rides.length){el.innerHTML='<div class="empty">Pas encore de données</div>';return;}
+  const ranked=rides.map(([n,s])=>({name:n,...s})).sort((a,b)=>b.global_avg-a.global_avg);
+  let h='<div class="sec">🏆 Classement</div><div style="background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 14px">';
+  ranked.slice(0,15).forEach((r,i)=>{
+    const rk=i<3?`<div class="rank r${i+1}">${i+1}</div>`:`<div class="rank rn">${i+1}</div>`;
+    const bs=SLOTS.filter(s=>r.slot_avgs?.[s.key]!=null).sort((a,b)=>r.slot_avgs[a.key]-r.slot_avgs[b.key])[0];
+    h+=`<div class="wt-row">${rk}<div class="wt-name">${r.name}${r.is_fp?' ⚡':''}</div><div style="text-align:right"><div class="wt-avg ${wc(r.global_avg)}">${r.global_avg}m</div><div style="font-size:.6rem;color:var(--muted)">${bs?bs.icon+' '+bs.label:''}</div></div></div>`;
+  });
+  h+='</div><div class="sec" style="margin-top:14px">🌡️ Par tranche</div><div class="slot-grid">';
+  const overallSlot={};
+  for(const s of SLOTS){const vals=rides.flatMap(([,st])=>st.slot_avgs?.[s.key]!=null?[st.slot_avgs[s.key]]:[]);overallSlot[s.key]=vals.length?Math.round(vals.reduce((a,b)=>a+b)/vals.length):null;}
+  SLOTS.forEach(s=>{const v=overallSlot[s.key];h+=`<div class="slot-box"><div class="slot-icon">${s.icon}</div><div class="slot-name">${s.label}</div><div class="slot-range">${s.range}</div><div class="slot-val ${wc(v)}">${v!=null?v:'—'}</div><div class="slot-unit">${v!=null?'min':''}</div></div>`;});
+  h+='</div>';
+  el.innerHTML=h;
+}
+function renderAttr(){
+  const el=document.getElementById('panel-attr');
+  const names=Object.keys(STATS).sort();
+  let h=`<div style="padding:10px 14px"><select class="sel" id="attrSel" onchange="renderAttrDetail()"><option value="">— Sélectionne une attraction —</option>${names.map(n=>`<option value="${n}">${n}${STATS[n].is_fp?' ⚡':''}</option>`).join('')}</select></div><div id="attrDetailInner"></div>`;
+  el.innerHTML=h;
+}
+function renderAttrDetail(){
+  const name=document.getElementById('attrSel').value;
+  const el=document.getElementById('attrDetailInner');
+  if(!name){el.innerHTML='';return;}
+  const st=STATS[name];
+  if(!st||st.global_avg===null){el.innerHTML='<div class="empty">Pas encore de données</div>';return;}
+  const valid=SLOTS.filter(s=>st.slot_avgs?.[s.key]!=null).sort((a,b)=>st.slot_avgs[a.key]-st.slot_avgs[b.key]);
+  const best=valid[0],worst=valid[valid.length-1];
+  let h=`<div class="card"><div style="font-size:.95rem;font-weight:700;color:var(--gold);margin-bottom:10px">${name}</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+    <div class="stat"><div class="stat-v ${wc(st.global_avg)}">${st.global_avg}</div><div class="stat-l">Moy. globale (min)</div></div>
+    ${best?`<div class="stat"><div class="stat-v cl-green">${st.slot_avgs[best.key]}</div><div class="stat-l">${best.icon} Meilleur</div></div>`:''}
+    ${worst&&worst.key!==best?.key?`<div class="stat"><div class="stat-v cl-red">${st.slot_avgs[worst.key]}</div><div class="stat-l">${worst.icon} Pire</div></div>`:''}
+  </div></div>
+  <div class="sec">🌡️ Par tranche</div><div class="slot-grid">
+  ${SLOTS.map(s=>`<div class="slot-box"><div class="slot-icon">${s.icon}</div><div class="slot-name">${s.label}</div><div class="slot-range">${s.range}</div><div class="slot-val ${wc(st.slot_avgs?.[s.key])}">${st.slot_avgs?.[s.key]!=null?st.slot_avgs[s.key]:'—'}</div><div class="slot-unit">${st.slot_avgs?.[s.key]!=null?'min':''}</div></div>`).join('')}
+  </div>
+  <div class="sec">⏰ Heure par heure</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 14px">`;
+  const maxH=Math.max(...Object.values(st.hourly_avgs||{}),1);
+  for(let h2=9;h2<=21;h2++){
+    const v=st.hourly_avgs?.[String(h2)];
+    const sl2=SLOTS.find(s=>h2+.5>=s.start&&h2<s.end);
+    h+=`<div class="hourly-row"><div class="hr-time">${String(h2).padStart(2,'0')}h</div><div class="hr-slot">${sl2?sl2.icon+' '+sl2.label:''}</div><div class="hr-bar"><div class="hr-bar-f" style="width:${v!=null?Math.round(v/maxH*100):0}%;background:${wbg(v)}"></div></div><div class="hr-wait ${wc(v)}">${v!=null?v+'m':'—'}</div></div>`;
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+function renderPlan(){
+  const el=document.getElementById('panel-plan');
+  const rides=Object.entries(STATS).filter(([,s])=>s.global_avg!==null);
+  const all=rides.map(([n,s])=>({name:n,...s})).sort((a,b)=>b.global_avg-a.global_avg);
+  const used=new Set();
+  function pick(slotKey,n){const r=all.filter(x=>!used.has(x.name)).sort((a,b)=>{const av=a.slot_avgs?.[slotKey]??a.global_avg??999,bv=b.slot_avgs?.[slotKey]??b.global_avg??999;return bv-av;}).slice(0,n);r.forEach(x=>used.add(x.name));return r;}
+  const plan=[
+    {slot:SLOTS[0],rides:pick('ouverture',2),tip:"Sois dans le parc 15 min avant l'ouverture. Fonce immédiatement !"},
+    {slot:SLOTS[1],rides:pick('matinee',3),tip:"Enchaîne les attractions proches. Utilise tes premiers Fast Pass."},
+    {slot:SLOTS[2],rides:pick('midi',2),tip:"🍽️ Déjeuner 12h15–13h. Les files bougent pendant que tout le monde mange."},
+    {slot:SLOTS[3],rides:pick('apresmidi',3),tip:"Pic d'affluence. Priorité aux Fast Pass. Bascule vers les Studios."},
+    {slot:SLOTS[4],rides:pick('fin',3),tip:"Les familles partent. Les files commencent à baisser."},
+    {slot:SLOTS[5],rides:pick('soiree',3),tip:"🌙 Créneau d'or ! Files au plus bas. Refais les favoris."},
+  ];
+  const fpRides=all.filter(r=>r.is_fp).slice(0,6);
+  let h=`<div class="sec">⚡ Fast Pass — Priorités</div>
+  <div style="background:var(--card);border:1px solid rgba(80,144,224,.25);border-radius:16px;margin:0 14px 12px;padding:14px">
+    <div style="font-size:.72rem;color:#5090e0;font-weight:700;margin-bottom:10px">Réserve dès 9h30 sur l'app DLP</div>
+    ${fpRides.map((r,i)=>`<div style="display:flex;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div style="width:22px;height:22px;border-radius:50%;background:rgba(80,144,224,.2);color:#5090e0;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0">${i+1}</div><div style="flex:1;font-size:.78rem;font-weight:700;margin:0 8px">${r.name}</div><div style="font-size:.9rem;font-weight:700;font-family:serif" class="${wc(r.global_avg)}">${r.global_avg!=null?r.global_avg+'m':'—'}</div></div>`).join('')}
+  </div>
+  <div class="sec">⏰ Programme du jour</div>
+  ${plan.map(p=>`<div class="plan-slot"><div class="plan-hdr"><span class="plan-icon">${p.slot.icon}</span><div><div class="plan-title">${p.slot.label}</div><div class="plan-range">${p.slot.range}</div></div></div>
+  <div class="plan-body">
+    ${p.rides.length?p.rides.map(r=>`<div class="plan-ride"><div><div class="pr-name">${r.name}</div><div class="pr-land">${sl(r.land)}</div></div><div style="display:flex;align-items:center;gap:6px">${r.slot_avgs?.[p.slot.key]!=null?`<span class="pr-wait ${wc(r.slot_avgs[p.slot.key])}">${r.slot_avgs[p.slot.key]}m</span>`:''} ${r.is_fp?'<span class="fp-tag">⚡ FP</span>':''}</div></div>`).join(''):'<div style="font-size:.75rem;color:var(--muted);padding:6px 0">Données en cours…</div>'}
+    <div class="plan-tip">💡 ${p.tip}</div>
+  </div></div>`).join('')}
+  <div style="margin:0 14px 20px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;font-size:.75rem;line-height:1.9">
+    🏰 <strong>DLP</strong> : 9h30→14h · 🎬 <strong>Studios</strong> : 14h→fermeture<br>
+    ❄️ <strong>Frozen Ever After</strong> : nouvelle le 26 mai — Fast Pass priorité absolue !<br>
+    📱 Surveille l'app DLP pour les files virtuelles
+  </div>`;
+  el.innerHTML=h;
+}
+updateCountdown();
+setInterval(updateCountdown,60000);
+(async()=>{await fetchAll();renderLive();})();
+setInterval(async()=>{await fetchAll();renderTab(activeTab);},65*60*1000);
+</script>
+</body>
+</html>
