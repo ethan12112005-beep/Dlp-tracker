@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Flask,jsonify,render_template
 
 app=Flask(__name__)
-DB=os.environ.get("DB_PATH","/data/dlp.db")
+DB=os.environ.get("DB_PATH","dlp.db")
 PORT=int(os.environ.get("PORT",8080))
 TARGET=["peter pan","big thunder","hyperspace mountain","star wars","small world","star tours","pirates of the caribbean","phantom manor","buzz lightyear","tower of terror","spider-man","spider man","avengers assemble","crush","ratatouille","rapunzel","tangled","frozen ever after","frozen"]
 FP=["peter pan","buzz lightyear","crush","ratatouille","frozen","avengers assemble"]
