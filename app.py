@@ -23,7 +23,7 @@ def avg(l):
     return round(sum(l)/len(l)) if l else None
 def collect():
     try:
-      req=urllib.request.Request("https://queue-times.com/parks/6/queue_times.json",headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1","Accept":"application/json","Accept-Language":"fr-FR,fr;q=0.9","Referer":"https://queue-times.com/"})
+        req=urllib.request.Request("https://queue-times.com/parks/6/queue_times.json",headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1","Accept":"application/json","Referer":"https://queue-times.com/"})
         with urllib.request.urlopen(req,timeout=20) as r:
             data=json.loads(r.read().decode())
         now=datetime.now()
@@ -40,21 +40,23 @@ def collect():
             conn.execute("DELETE FROM t WHERE ts<?",((ts-60*86400),))
             conn.commit()
             print(f"OK {len(rows)} rides")
+        else:
+            print("Aucune attraction trouvee")
     except Exception as e:
         print(f"ERR {e}")
 def loop():
-    collect()
+    time.sleep(10)
     while True:
-        time.sleep(3600)
         collect()
+        time.sleep(3600)
 @app.route("/health")
 def health():return "OK"
 @app.route("/api/status")
 def status():
     n=conn.execute("SELECT COUNT(*) as n FROM t").fetchone()["n"]
-    last=conn.execute("SELECT MAX(ts_str) as t FROM(SELECT dk||' '||printf('%02d',hour)||'h' as ts_str FROM t)").fetchone()["t"]
     days=conn.execute("SELECT COUNT(DISTINCT dk) as n FROM t").fetchone()["n"]
     rides=conn.execute("SELECT COUNT(DISTINCT name) as n FROM t").fetchone()["n"]
+    last=conn.execute("SELECT MAX(dk) as d FROM t").fetchone()["d"]
     return jsonify({"ok":True,"total_rows":n,"last_collect":last or "—","days_collected":days,"rides_tracked":rides})
 @app.route("/api/latest")
 def latest():
@@ -83,7 +85,7 @@ def stats():
         lr=conn.execute("SELECT land FROM t WHERE name=? LIMIT 1",(name,)).fetchone()
         res[name]={"land":lr["land"] if lr else "","global_avg":avg(gv),"slot_avgs":sa,"hourly_avgs":ha,"daily_avgs":da,"data_points":len(gv),"is_fp":any(f in name.lower() for f in FP)}
     return jsonify(res)
-@app.route("/api/collect",methods=["POST"])
+@app.route("/api/collect",methods=["GET","POST"])
 def api_collect():
     threading.Thread(target=collect,daemon=True).start()
     return jsonify({"status":"started"})
