@@ -10,7 +10,6 @@ FP=["peter pan","buzz lightyear","crush","ratatouille","frozen","avengers assemb
 SLOTS=[{"key":"ouverture","start":9.5,"end":10.5},{"key":"matinee","start":10.5,"end":12},{"key":"midi","start":12,"end":14},{"key":"apresmidi","start":14,"end":16.5},{"key":"fin","start":16.5,"end":19},{"key":"soiree","start":19,"end":22}]
 
 def db():
-    os.makedirs(os.path.dirname(DB),exist_ok=True)
     c=sqlite3.connect(DB,check_same_thread=False)
     c.row_factory=sqlite3.Row
     return c
