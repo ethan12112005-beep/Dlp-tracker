@@ -23,7 +23,7 @@ def avg(l):
     return round(sum(l)/len(l)) if l else None
 def collect():
     try:
-        req=urllib.request.Request("https://queue-times.com/parks/6/queue_times.json",headers={"User-Agent":"DLP/1.0"})
+      req=urllib.request.Request("https://queue-times.com/parks/6/queue_times.json",headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1","Accept":"application/json","Accept-Language":"fr-FR,fr;q=0.9","Referer":"https://queue-times.com/"})
         with urllib.request.urlopen(req,timeout=20) as r:
             data=json.loads(r.read().decode())
         now=datetime.now()
