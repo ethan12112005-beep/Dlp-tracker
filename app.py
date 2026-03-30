@@ -5,8 +5,9 @@ app=Flask(__name__)
 DB="dlp.db"
 PORT=int(os.environ.get("PORT",8080))
 PARIS=timezone(timedelta(hours=2))
-TARGET=["peter pan","big thunder","hyperspace","star wars","small world","star tours","pirates","phantom manor","buzz lightyear","tower of terror","spider-man","spider man","avengers","crush","ratatouille","rapunzel","tangled","frozen","indiana","race through"]
-FP=["peter pan","buzz lightyear","crush","ratatouille","frozen","avengers"]
+PARK_IDS=[4,28]
+TARGET=["peter pan","big thunder","hyperspace","star wars","small world","star tours","pirates","phantom manor","buzz lightyear","space ranger","tower of terror","spider-man","spider man","avengers","crush","ratatouille","rapunzel","tangled","frozen","indiana"]
+FP=["peter pan","buzz lightyear","space ranger","crush","ratatouille","frozen","avengers"]
 SLOTS=[{"key":"ouverture","start":9.5,"end":10.5},{"key":"matinee","start":10.5,"end":12},{"key":"midi","start":12,"end":14},{"key":"apresmidi","start":14,"end":16.5},{"key":"fin","start":16.5,"end":19},{"key":"soiree","start":19,"end":22}]
 conn=sqlite3.connect(DB,check_same_thread=False)
 conn.row_factory=sqlite3.Row
@@ -26,19 +27,20 @@ def avg(l):
     return round(sum(l)/len(l)) if l else None
 def collect():
     try:
-        req=urllib.request.Request("https://queue-times.com/parks/6/queue_times.json",headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1","Accept":"application/json","Referer":"https://queue-times.com/"})
-        with urllib.request.urlopen(req,timeout=20) as r:
-            data=json.loads(r.read().decode())
         now=now_paris()
         ts=int(time.time())
         sl=slot(now)
         dk=now.strftime("%Y-%m-%d")
         hour=now.hour
         rows=[]
-        for land in data.get("lands",[]):
-            for ride in land.get("rides",[]):
-                if any(k in ride["name"].lower() for k in TARGET):
-                    rows.append((ts,sl,hour,dk,ride["name"],land["name"],ride["wait_time"] if ride["is_open"] else None,1 if ride["is_open"] else 0))
+        for park_id in PARK_IDS:
+            req=urllib.request.Request(f"https://queue-times.com/parks/{park_id}/queue_times.json",headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1","Accept":"application/json","Referer":"https://queue-times.com/"})
+            with urllib.request.urlopen(req,timeout=20) as r:
+                data=json.loads(r.read().decode())
+            for land in data.get("lands",[]):
+                for ride in land.get("rides",[]):
+                    if any(k in ride["name"].lower() for k in TARGET):
+                        rows.append((ts,sl,hour,dk,ride["name"],land["name"],ride["wait_time"] if ride["is_open"] else None,1 if ride["is_open"] else 0))
         if rows:
             conn.executemany("INSERT INTO t(ts,slot,hour,dk,name,land,wait,open) VALUES(?,?,?,?,?,?,?,?)",rows)
             conn.execute("DELETE FROM t WHERE ts<?",((ts-60*86400),))
