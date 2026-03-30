@@ -1,11 +1,12 @@
 import os,json,time,threading,urllib.request,sqlite3
-from datetime import datetime
+from datetime import datetime,timezone,timedelta
 from flask import Flask,jsonify,render_template
 app=Flask(__name__)
 DB="dlp.db"
 PORT=int(os.environ.get("PORT",8080))
-TARGET=["peter pan","big thunder","hyperspace mountain","star wars","small world","star tours","pirates of the caribbean","phantom manor","buzz lightyear","tower of terror","spider-man","spider man","avengers assemble","crush","ratatouille","rapunzel","tangled","frozen ever after","frozen"]
-FP=["peter pan","buzz lightyear","crush","ratatouille","frozen","avengers assemble"]
+PARIS=timezone(timedelta(hours=2))
+TARGET=["peter pan","big thunder","hyperspace","star wars","small world","star tours","pirates","phantom manor","buzz lightyear","tower of terror","spider-man","spider man","avengers","crush","ratatouille","rapunzel","tangled","frozen","indiana","race through"]
+FP=["peter pan","buzz lightyear","crush","ratatouille","frozen","avengers"]
 SLOTS=[{"key":"ouverture","start":9.5,"end":10.5},{"key":"matinee","start":10.5,"end":12},{"key":"midi","start":12,"end":14},{"key":"apresmidi","start":14,"end":16.5},{"key":"fin","start":16.5,"end":19},{"key":"soiree","start":19,"end":22}]
 conn=sqlite3.connect(DB,check_same_thread=False)
 conn.row_factory=sqlite3.Row
@@ -13,6 +14,8 @@ conn.execute("CREATE TABLE IF NOT EXISTS t(id INTEGER PRIMARY KEY,ts INTEGER,slo
 conn.execute("CREATE INDEX IF NOT EXISTS i1 ON t(name)")
 conn.execute("CREATE INDEX IF NOT EXISTS i2 ON t(dk)")
 conn.commit()
+def now_paris():
+    return datetime.now(timezone.utc).astimezone(PARIS)
 def slot(dt):
     h=dt.hour+dt.minute/60
     for s in SLOTS:
@@ -26,22 +29,23 @@ def collect():
         req=urllib.request.Request("https://queue-times.com/parks/6/queue_times.json",headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1","Accept":"application/json","Referer":"https://queue-times.com/"})
         with urllib.request.urlopen(req,timeout=20) as r:
             data=json.loads(r.read().decode())
-        now=datetime.now()
+        now=now_paris()
         ts=int(time.time())
         sl=slot(now)
         dk=now.strftime("%Y-%m-%d")
+        hour=now.hour
         rows=[]
         for land in data.get("lands",[]):
             for ride in land.get("rides",[]):
                 if any(k in ride["name"].lower() for k in TARGET):
-                    rows.append((ts,sl,now.hour,dk,ride["name"],land["name"],ride["wait_time"] if ride["is_open"] else None,1 if ride["is_open"] else 0))
+                    rows.append((ts,sl,hour,dk,ride["name"],land["name"],ride["wait_time"] if ride["is_open"] else None,1 if ride["is_open"] else 0))
         if rows:
             conn.executemany("INSERT INTO t(ts,slot,hour,dk,name,land,wait,open) VALUES(?,?,?,?,?,?,?,?)",rows)
             conn.execute("DELETE FROM t WHERE ts<?",((ts-60*86400),))
             conn.commit()
-            print(f"OK {len(rows)} rides")
+            print(f"OK {len(rows)} rides · {now.strftime('%H:%M')} Paris")
         else:
-            print("Aucune attraction trouvee")
+            print(f"Aucune attraction · {now.strftime('%H:%M')} Paris")
     except Exception as e:
         print(f"ERR {e}")
 def loop():
