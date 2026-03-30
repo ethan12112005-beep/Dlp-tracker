@@ -43,10 +43,10 @@ def collect():
     except Exception as e:
         print(f"ERR {e}")
 def loop():
-    time.sleep(3)
+    collect()
     while True:
-        collect()
         time.sleep(3600)
+        collect()
 @app.route("/health")
 def health():return "OK"
 @app.route("/api/status")
